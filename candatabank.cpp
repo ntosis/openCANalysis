@@ -31,6 +31,23 @@ void CANdatabank::DBC_browsefile()
     //readfileDB();
 }
 
+quint16 CANdatabank::BitsToUINT16(quint8 bitstart, quint8 bitend, quint64 data)
+{
+    quint8 bits[64];
+
+    // Convert from quint64 to Bit Array
+    for(int i=0; i<64; ++i){
+            int f=i; bool bit = (data&(1<<(63-i)));
+            if(bit) bits[f]=1; else bits[f]=0;
+        }
+    quint16 dec=0;
+    for(int i=bitstart; i<bitend;i++) {
+        //dec += pow(2,i)*bits[i];
+        dec |= ((bits[i])<<i);
+    }
+    return dec;
+}
+
 QString CANdatabank::CANFrameName(quint32 CANid)
 {
     QString string;
@@ -57,7 +74,7 @@ QString CANdatabank::CANFrameName(quint32 CANid)
 
 }
 
-QVector<QStringList> CANdatabank::CANSignalList(quint32 CANid)
+QVector<QStringList> CANdatabank::CANSignalList(quint32 CANid, quint64 data, quint8 dlc)
 {
     QString string;
     QString CANframeName=string.setNum(CANid,16);
@@ -70,9 +87,22 @@ QVector<QStringList> CANdatabank::CANSignalList(quint32 CANid)
       else
         qDebug() << "Table created!";
     while (query.next()) {
-
-             QStringList results;
-             results << query.value(1).toString();
+        //******* DECLARATION
+         float offset,faktor; quint16 bitofstart,bitofend; QString value; bool text_values;
+         QStringList results;
+         //******Store the infos from DB to variables
+             results << query.value(1).toString(); //Name of signal in DB
+             faktor=query.value(2).toFloat();
+             offset=query.value(3).toFloat();
+             bitofstart=query.value(4).toUInt();
+             bitofend=query.value(5).toUInt();
+             value=query.value(6).toString();
+             text_values=query.value(7).toBool();
+         //**************************//
+         //******Execute the function for the Data value
+             if(text_values) {/*psaxe xana sthn DB gia ta values  */}
+             else { results.append(QString::number(BitsToUINT16(bitofstart,bitofend,data)));/* return the bitnumber*/ }
+             results << value;
             temporary.push_back(results);
             }
     return temporary;

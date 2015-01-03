@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     serial = new QSerialPort(this);
     settings = new SettingsDialog;
     sendform = new SendForm;
-    candatabank = new CANdatabank;
+    candatabank = new CANdatabank();
    // emit connectStatusForSendForm("Disconnected");
 //! [1]
 
@@ -78,6 +78,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     sendform->setConnectedStatus("<font color='red'>Disconnected</font>");
     // Set the headers
+    ui->baudRateComboBox->addItem("100");
     ui->baudRateComboBox->addItem("250");
     ui->baudRateComboBox->addItem("500");
     ui->baudRateComboBox->addItem("1M");
@@ -375,19 +376,30 @@ QStringList f;
 void MainWindow::addTreeChild(QTreeWidgetItem *parent,
                   CAN_Frames B)
 {
-    QByteArray bytes = "ff";
+    int s =sizeof(B.Data);
     // Create a bit array of the appropriate size
-    QBitArray bits(bytes.count()*8);
+    quint8 bits[B.DLC*8];
 
     // Convert from QByteArray to QBitArray
-    for(int i=0; i<bytes.count(); ++i){
+    for(int i=0; i<s; ++i){
         for(int b=0; b<8; ++b) {
-            bits.setBit(i*8+b, bytes.at(i)&(1<<(b)));
+            int f=i*8+b; bool bit = (B.Data[i]&(1<<(7-b)));
+            if(bit) bits[f]=1; else bits[f]=0;
         }}
+    quint64 CANDataFrameAs64bitUint=0;
+    for(int i=0; i<B.DLC*8;i++) {
+        //dec += pow(2,i)*bits[i];
+        CANDataFrameAs64bitUint |= ((bits[i])<<i);
+    }
 
-    QVector<QStringList> results = candatabank->CANSignalList(B.id);
+    quint8 *add = (quint8*) bits[0];
+    add;
+    QVector<QStringList> results;// = candatabank->CANSignalList(B.id,CANDataFrameAs64bitUint,B.DLC);
     if(results.size()>0) {
-        for(int i=0; i<results.size();i++) {QStringList temp= results[i]; QTreeWidgetItem *treeItem = new QTreeWidgetItem(temp); parent->addChild(treeItem);}
+        for(int i=0; i<results.size();i++) {
+            QStringList temp= results[i];
+            QTreeWidgetItem *treeItem = new QTreeWidgetItem(temp);
+            parent->addChild(treeItem);}
 
     }
 }
@@ -413,9 +425,10 @@ void MainWindow::changeBaudRate(int baudrate)
 {
     QByteArray command;
     switch(baudrate) {
-    case 0: command = "$BAUDRATE=250*";  break;//250 Kbits
-    case 1: command = "$BAUDRATE=500*"; break;//500 Kbits
-    case 2: command = "$BAUDRATE=1000*"; break;//1 Mbits
+    case 0: command = "$BAUDRATE=100*";  break;//100 Kbits
+    case 1: command = "$BAUDRATE=250*";  break;//250 Kbits
+    case 2: command = "$BAUDRATE=500*"; break;//500 Kbits
+    case 3: command = "$BAUDRATE=1000*"; break;//1 Mbits
 }
     writeData(command);
 }

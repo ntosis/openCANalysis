@@ -21,6 +21,7 @@ public:
     ~CANdatabank();
 private slots:
     void DBC_browsefile();
+    quint16 BitsToUINT16(quint8 bitstart, quint8 bitend, quint64 data);
 private:
     QString fileName;
     Ui::CANdatabank *ui;
@@ -28,7 +29,7 @@ private:
     int OKdataBankFlag;
 public slots:
     QString CANFrameName(quint32 CANid);
-    QVector<QStringList> CANSignalList(quint32 CANid);
+    QVector<QStringList> CANSignalList(quint32 CANid, quint64 data, quint8 dlc);
     int returnOKdataBankFlag();
 };
 
