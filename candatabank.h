@@ -7,6 +7,7 @@
 #include <QSqlQuery>
 #include <QMessageBox>
 #include <QVector>
+#include "candatabank.h"
 
 namespace Ui {
 class CANdatabank;
@@ -31,6 +32,7 @@ public slots:
     QString CANFrameName(quint32 CANid);
     QVector<QStringList> CANSignalList(quint32 CANid, quint64 data, quint8 dlc);
     int returnOKdataBankFlag();
+    quint32 returnCANIdfromName(QString name);
 };
 
 #endif // CANDATABANK_H

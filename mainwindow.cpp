@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     serial = new QSerialPort(this);
     settings = new SettingsDialog;
     sendform = new SendForm;
-    candatabank = new CANdatabank();
+    candatabank = new CANdatabank;
    // emit connectStatusForSendForm("Disconnected");
 //! [1]
 
@@ -108,12 +108,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(sendform,SIGNAL(periodicMsgSend_CHRONO(QByteArray)),this,SLOT(writeData(QByteArray)));
 
     connect(ui->baudRateComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(changeBaudRate(int)));
-
+    connect(ui->treeWidget,SIGNAL(itemExpanded(QTreeWidgetItem*)),this,SLOT(setIfThisItemIsExpanded(QTreeWidgetItem*)));
+    connect(ui->treeWidget,SIGNAL(itemCollapsed(QTreeWidgetItem*)),this,SLOT(setIfThisItemIsCollapsed(QTreeWidgetItem*)));
 //!
 
 }
 //! [3]
-
 MainWindow::~MainWindow()
 {
     delete settings;
@@ -288,12 +288,15 @@ void MainWindow::SortTheFrameToStructure(QStringList list) {
     if(collected_frames.size()>0) {
         qint8 idx;
         idx = ReturnIndexOfSearch(R.id);
-        CAN_Frames temp; if(idx>-1) {
+        CAN_Frames temp;
+        if(idx>-1) {
             temp=collected_frames.at(idx);
             // auxise ton counter
             R.counter=temp.counter+1;
             //Calculate the dt of this frame
             R.period(QDateTime::currentMSecsSinceEpoch(),temp);
+            //Store the previous state of the item is expanded or not for the GUI.
+            R.forGUI_isThisItemExpanded=temp.forGUI_isThisItemExpanded;
         }
     } else {R.counter=0;}
 
@@ -303,6 +306,7 @@ void MainWindow::SortTheFrameToStructure(QStringList list) {
     R.remote = list[3].toShort(&ok,10);
     R.DLC = list[4].toShort(&ok,10);
     for (int i=0; i<R.DLC;i++) {R.Data[i] = list[5+i].toUInt(&ok,16);}
+    if(R.DLC<8) {for(int k=R.DLC;k<8;k++) R.Data[k]=0;} //Work around  NEED to TESTED
     //--------------
     //---find again the possition of the frame into vector and replace it if exist or add a new one and sort the vector
     if(collected_frames.size()>0) {
@@ -317,6 +321,7 @@ void MainWindow::SortTheFrameToStructure(QStringList list) {
 //# For every CAN frame in the Vector collected_frames call the function addTreeRoot,
 //# this function will rendering the received data on the GUI Tree View.
 void MainWindow::ResultsToTreeview() {
+
 ui->treeWidget->clear();
 
 if (collected_frames.size()>0)
@@ -343,7 +348,7 @@ QStringList f;
 
    if(candatabank->returnOKdataBankFlag()==1) {
    treeItem->setTextAlignment(0,Qt::AlignRight);
-   treeItem->setText(0, candatabank->CANFrameName(B.id).toUpper());
+   treeItem->setText(0, candatabank->CANFrameName(B.id));
 
    }
    else {
@@ -370,7 +375,9 @@ QStringList f;
   ui->treeWidget->setColumnWidth(3,55);
   ui->treeWidget->setColumnWidth(4,200);
 
-  addTreeChild(treeItem,B);
+  if(candatabank->returnOKdataBankFlag()==1) addTreeChild(treeItem,B);
+  //Set this item as expanded if the User has expanded this item before
+  treeItem->setExpanded(B.forGUI_isThisItemExpanded);
 }
 
 void MainWindow::addTreeChild(QTreeWidgetItem *parent,
@@ -378,7 +385,7 @@ void MainWindow::addTreeChild(QTreeWidgetItem *parent,
 {
     int s =sizeof(B.Data);
     // Create a bit array of the appropriate size
-    quint8 bits[B.DLC*8];
+    quint8 bits[64]; //here was a bug ATTENTION!
 
     // Convert from QByteArray to QBitArray
     for(int i=0; i<s; ++i){
@@ -392,14 +399,13 @@ void MainWindow::addTreeChild(QTreeWidgetItem *parent,
         CANDataFrameAs64bitUint |= ((bits[i])<<i);
     }
 
-    quint8 *add = (quint8*) bits[0];
-    add;
-    QVector<QStringList> results;// = candatabank->CANSignalList(B.id,CANDataFrameAs64bitUint,B.DLC);
+    results  = candatabank->CANSignalList(B.id,CANDataFrameAs64bitUint,B.DLC);
     if(results.size()>0) {
         for(int i=0; i<results.size();i++) {
             QStringList temp= results[i];
             QTreeWidgetItem *treeItem = new QTreeWidgetItem(temp);
-            parent->addChild(treeItem);}
+            parent->addChild(treeItem);
+        }
 
     }
 }
@@ -431,6 +437,37 @@ void MainWindow::changeBaudRate(int baudrate)
     case 3: command = "$BAUDRATE=1000*"; break;//1 Mbits
 }
     writeData(command);
+}
+
+void MainWindow::setIfThisItemIsExpanded(QTreeWidgetItem *item)
+{
+CAN_Frames B; bool ok;
+int i = ReturnIndexOfSearch(item->text(0).toUInt(&ok,16));
+if(!ok) {
+        i = ReturnIndexOfSearch(candatabank->returnCANIdfromName(item->text(0)));
+}
+if(i>-1) {
+    B=collected_frames[i];
+    B.forGUI_isThisItemExpanded = true;
+    collected_frames.replace(i,B);
+}
+
+}
+
+void MainWindow::setIfThisItemIsCollapsed(QTreeWidgetItem *item)
+{
+CAN_Frames B; bool ok;
+int i = ReturnIndexOfSearch(item->text(0).toUInt(&ok,16));
+if(!ok) {
+i = ReturnIndexOfSearch(candatabank->returnCANIdfromName(item->text(0)));
+qDebug() <<"i="<<i;
+}
+if(i>-1) {
+B=collected_frames[i];
+B.forGUI_isThisItemExpanded = false;
+collected_frames.replace(i,B);
+     }
+
 }
 
 void MainWindow::closeEvent ( QCloseEvent * event )

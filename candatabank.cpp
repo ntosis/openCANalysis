@@ -11,9 +11,10 @@ CANdatabank::CANdatabank(QWidget *parent) :
 
 CANdatabank::~CANdatabank()
 {
-    delete ui;
+
     mydb.commit();
     mydb.close();
+    delete ui;
 }
 
 void CANdatabank::DBC_browsefile()
@@ -80,6 +81,8 @@ QVector<QStringList> CANdatabank::CANSignalList(quint32 CANid, quint64 data, qui
     QString CANframeName=string.setNum(CANid,16);
     QVector<QStringList> temporary; temporary.reserve(20);
     QSqlQuery query(mydb);
+    QStringList results,emptylist; emptylist<<" ";
+    bool flag=false;
 
      query.prepare("SELECT * FROM Signals WHERE CANID='"+string.setNum(CANid)+"' ");
      if( !query.exec() )
@@ -87,9 +90,9 @@ QVector<QStringList> CANdatabank::CANSignalList(quint32 CANid, quint64 data, qui
       else
         qDebug() << "Table created!";
     while (query.next()) {
+        flag=true;
         //******* DECLARATION
          float offset,faktor; quint16 bitofstart,bitofend; QString value; bool text_values;
-         QStringList results;
          //******Store the infos from DB to variables
              results << query.value(1).toString(); //Name of signal in DB
              faktor=query.value(2).toFloat();
@@ -105,10 +108,34 @@ QVector<QStringList> CANdatabank::CANSignalList(quint32 CANid, quint64 data, qui
              results << value;
             temporary.push_back(results);
             }
-    return temporary;
+    if(flag) return temporary;
+    else  temporary.push_back(emptylist); return temporary;
 }
 
 int CANdatabank::returnOKdataBankFlag()
 {
     return OKdataBankFlag;
+}
+
+quint32 CANdatabank::returnCANIdfromName(QString name)
+{
+     quint32 result=0;
+     QSqlQuery query(mydb);
+     //db queries "+temp[0].toString()+"
+     query.prepare("SELECT CANID FROM CAN_Frame WHERE name='"+name+"' ");
+     //query.bindValue(":id", 1001);
+     //query.bindValue(":name", "first_name");
+     //query.bindValue(":CANID", 150);
+     if( !query.exec() )
+        qDebug() << query.lastError();
+      else
+        qDebug() << "Table created!";
+    while (query.next()) {
+
+             result =query.value(0).toUInt();
+
+            }
+    return result;
+
+
 }

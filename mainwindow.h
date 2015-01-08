@@ -83,6 +83,7 @@ struct CAN_Frames {
             }
         //calculates the dt of the frame from the previous sended time until now
         quint32 period(const quint64 tm,const CAN_Frames &before);
+        bool forGUI_isThisItemExpanded =false;
 };
 
 class MainWindow : public QMainWindow
@@ -109,6 +110,8 @@ private slots:
                       CAN_Frames B);
     int ReturnIndexOfSearch(quint32 id);
     void changeBaudRate(int baudrate);
+    void setIfThisItemIsExpanded(QTreeWidgetItem *item);
+    void setIfThisItemIsCollapsed(QTreeWidgetItem *item);
 
 
 private:
@@ -134,6 +137,7 @@ private:
     bool SerialOpen;
 public:
     bool isSerialOpen();
+    QVector<QStringList> results;
 };
 
 #endif // MAINWINDOW_H
