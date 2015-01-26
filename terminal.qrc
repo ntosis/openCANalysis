@@ -8,5 +8,7 @@
         <file>images/sendmessage.png</file>
         <file>images/send_pushed.png</file>
         <file>images/send_button.png</file>
+        <file>images/canDBnot.png</file>
+        <file>images/canDBok.png</file>
     </qresource>
 </RCC>

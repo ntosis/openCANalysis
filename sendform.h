@@ -88,6 +88,7 @@ private:
     QStringList columnList;
     void closeEvent ( QCloseEvent * event );
     QVector<CAN_Frame_periodic> VectorPeriodicFrames;    //MainWindow *mainwindow;
+    quint32 timeBefore;
 signals:
     //23-11
     void CANmessageToSend(QByteArray);

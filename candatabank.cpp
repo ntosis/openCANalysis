@@ -42,7 +42,7 @@ quint16 CANdatabank::BitsToUINT16(quint8 bitstart, quint8 bitend, quint64 data)
             if(bit) bits[f]=1; else bits[f]=0;
         }
     quint16 dec=0;
-    for(int i=bitstart; i<bitend;i++) {
+    for(int i=bitstart; i<bitend+1;i++) {
         //dec += pow(2,i)*bits[i];
         dec |= ((bits[i])<<i);
     }
@@ -52,11 +52,10 @@ quint16 CANdatabank::BitsToUINT16(quint8 bitstart, quint8 bitend, quint64 data)
 QString CANdatabank::CANFrameName(quint32 CANid)
 {
     QString string;
-    QString CANframeName=string.setNum(CANid,16);
+    QString CANframeName=string.setNum(CANid,16).toUpper();
     QSqlQuery query(mydb);
 
     //db queries "+temp[0].toString()+"
-    int t=1500;
      query.prepare("SELECT name FROM CAN_Frame WHERE CANID='"+string.setNum(CANid)+"' ");
      //query.bindValue(":id", 1001);
      //query.bindValue(":name", "first_name");

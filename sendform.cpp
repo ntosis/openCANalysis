@@ -3,7 +3,7 @@
 //#include "mainwindow.h"
 
 //#include <QTime>
-
+#include <math.h>
 QT_USE_NAMESPACE
 
 
@@ -290,16 +290,22 @@ void SendForm::remoteCheckBoxReaction(int column, QTreeWidgetItem *item)
 
 void SendForm::SendPeriodicCANmessages()
 {
+    quint32 timeNow = QDateTime::currentMSecsSinceEpoch();
     if(VectorPeriodicFrames.size()>0) {
         for(int i=0; i<VectorPeriodicFrames.size(); i++) {
             CAN_Frame_periodic temp=VectorPeriodicFrames[i];
-            quint32 dt = QDateTime::currentMSecsSinceEpoch() - temp.time_stamp;
-            //qDebug() << dt%temp.period;
-            if(((dt%temp.period)==0)&&(temp.periodic==TRUE)) {
+            quint32 dt = timeNow-timeBefore;
+            temp.time_stamp +=dt;
+            if(temp.time_stamp>temp.period) {
                 //qDebug() << "ok";
-                emit periodicMsgSend_CHRONO(convertCANmsgfromStructtoByteArray(&temp)); }
+                temp.time_stamp=0;
+                QByteArray message = convertCANmsgfromStructtoByteArray(&temp);
+                emit periodicMsgSend_CHRONO(message); }
+            VectorPeriodicFrames.replace(i,temp);
         }
     }
+    qDebug() << QDateTime::currentMSecsSinceEpoch();
+    timeBefore = timeNow;
 }
 
 void SendForm::putItemsInfosInStruct(QTreeWidgetItem *item)
@@ -314,7 +320,8 @@ void SendForm::putItemsInfosInStruct(QTreeWidgetItem *item)
     temp.periodic = TRUE;
     temp.DLC=8;
     for(int i=0; i<temp.DLC;i++)  temp.Data[i]=item->text(byte1+i).toUInt(&ok,16);
-    temp.time_stamp=QDateTime::currentMSecsSinceEpoch();
+    //temp.time_stamp=QDateTime::currentMSecsSinceEpoch();
+    temp.time_stamp=0;
     VectorPeriodicFrames.push_back(temp);
 
 }
@@ -374,4 +381,22 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *ev)
         }
 
 }
+
+
+    if(VectorPeriodicFrames.size()>0) {
+        for(int i=0; i<VectorPeriodicFrames.size(); i++) {
+            CAN_Frame_periodic temp=VectorPeriodicFrames[i];
+            quint32 dt = QDateTime::currentMSecsSinceEpoch() - temp.time_stamp;
+            //qDebug() << dt%temp.period;
+            float test1 = float(dt);
+            float test2 = float(temp.period);
+            float rem = test1/test2;
+            rem=rem-(int)rem;
+            //qDebug() << rem;
+            if((rem<0.02)&&(temp.periodic==TRUE)) {
+                //qDebug() << "ok";
+                QByteArray message = convertCANmsgfromStructtoByteArray(&temp);
+                emit periodicMsgSend_CHRONO(message); }
+        }
+    }
 */

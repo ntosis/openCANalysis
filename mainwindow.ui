@@ -72,7 +72,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionConfigure"/>
-    <addaction name="actionClear"/>
+    <addaction name="actionDB"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -90,13 +90,13 @@
     <enum>LeftToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
    <addaction name="actionConnect"/>
    <addaction name="actionDisconnect"/>
    <addaction name="actionConfigure"/>
    <addaction name="actionSend"/>
-   <addaction name="actionClear"/>
+   <addaction name="actionDB"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">
@@ -160,19 +160,23 @@
     <string>Alt+C</string>
    </property>
   </action>
-  <action name="actionClear">
+  <action name="actionDB">
    <property name="icon">
     <iconset resource="terminal.qrc">
-     <normaloff>:/images/clear.png</normaloff>:/images/clear.png</iconset>
+     <normaloff>:/images/canDBnot.png</normaloff>
+     <normalon>:/images/canDBnot.png</normalon>:/images/canDBnot.png</iconset>
    </property>
    <property name="text">
-    <string>C&amp;lear</string>
+    <string>D&amp;B</string>
+   </property>
+   <property name="iconText">
+    <string>DB</string>
    </property>
    <property name="toolTip">
-    <string>Clear data</string>
+    <string>Open CAN data bank</string>
    </property>
    <property name="shortcut">
-    <string>Alt+L</string>
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -207,6 +211,7 @@
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
   <tabstop>treeWidget</tabstop>
+  <tabstop>baudRateComboBox</tabstop>
  </tabstops>
  <resources>
   <include location="terminal.qrc"/>

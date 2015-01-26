@@ -51,7 +51,7 @@
 #include <QtSerialPort/QSerialPort>
 #include <QVector>
 #include <QDebug>
- #include <QDateTime>
+#include <QDateTime>
 #include <QTime>
 #include <QBitArray>
 //! [0]
@@ -227,7 +227,7 @@ void MainWindow::initActionsConnections()
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(ui->actionConfigure, SIGNAL(triggered()), settings, SLOT(show()));
     connect(ui->actionSend, SIGNAL(triggered()), sendform, SLOT(show()));
-    connect(ui->actionClear, SIGNAL(triggered()), candatabank, SLOT(DBC_browsefile()));
+    connect(ui->actionDB, SIGNAL(triggered()), candatabank, SLOT(DBC_browsefile()));
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
@@ -369,7 +369,7 @@ QStringList f;
   treeItem->setText(3,rmt);
   treeItem->setText(4,data.toUpper());
   treeItem->setText(5,DeltaTime.toUpper());
-  //some graphig optimization
+  //some GUI optimization
   ui->treeWidget->setColumnWidth(1,60);
   ui->treeWidget->setColumnWidth(2,55);
   ui->treeWidget->setColumnWidth(3,55);
@@ -388,13 +388,13 @@ void MainWindow::addTreeChild(QTreeWidgetItem *parent,
     quint8 bits[64]; //here was a bug ATTENTION!
 
     // Convert from QByteArray to QBitArray
-    for(int i=0; i<s; ++i){
+    for(int i=0; i<8; ++i){
         for(int b=0; b<8; ++b) {
             int f=i*8+b; bool bit = (B.Data[i]&(1<<(7-b)));
             if(bit) bits[f]=1; else bits[f]=0;
         }}
     quint64 CANDataFrameAs64bitUint=0;
-    for(int i=0; i<B.DLC*8;i++) {
+    for(int i=0; i<64;i++) {
         //dec += pow(2,i)*bits[i];
         CANDataFrameAs64bitUint |= ((bits[i])<<i);
     }
